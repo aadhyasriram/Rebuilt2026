@@ -15,6 +15,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -31,10 +32,13 @@ import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+import yams.motorcontrollers.remote.TalonFXWrapper;
 
-public class Climber extends SubsystemBase {
-  private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+public class ClimberSubsystem extends SubsystemBase {
+  // Vendor motor controller object
+  private TalonFX m_elevatorMotor = new TalonFX(4);
+
+  private SmartMotorControllerConfig elevatorConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
   // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
   .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
@@ -57,13 +61,10 @@ public class Climber extends SubsystemBase {
   .withClosedLoopRampRate(Seconds.of(0.25))
   .withOpenLoopRampRate(Seconds.of(0.25));
 
-  // Vendor motor controller object
-  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
-
   // Create our SmartMotorController from our Spark and config with the NEO.
-  private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
+  private SmartMotorController elvMotorController = new TalonFXWrapper(m_elevatorMotor, DCMotor.getFalcon500Foc(1), elevatorConfig);
   
-  private ElevatorConfig elevconfig = new ElevatorConfig(sparkSmartMotorController)
+  private ElevatorConfig elevconfig = new ElevatorConfig(elvMotorController)
       .withStartingHeight(Meters.of(0.5))
       .withHardLimits(Meters.of(0), Meters.of(3))
       .withTelemetry("Elevator", TelemetryVerbosity.HIGH)
@@ -79,13 +80,6 @@ public class Climber extends SubsystemBase {
    * @return a Command
    */
   public Command setHeight(Distance height) { return elevator.run(height);}
-  
-  /**
-   * Set the height of the elevator and ends the command when reached, but not the closed loop controller.
-   * @param angle Distance to go to.
-   * @return A Command
-   */
-  public Command setHeightAndStop(Distance height, Distance tolerance) { return elevator.runTo(height,tolerance);}
   
   /**
    * Set the elevators closed loop controller setpoint.
@@ -105,7 +99,7 @@ public class Climber extends SubsystemBase {
   public Command sysId() { return elevator.sysId(Volts.of(7), Volts.of(2).per(Second), Seconds.of(4));}
 
   /** Creates a new Climber. */
-  public Climber() {}
+  public ClimberSubsystem() {}
 
   @Override
   public void periodic() {
