@@ -23,12 +23,13 @@ public class RobotContainer {
   private void configureBindings() {
     // Schedule `setHeight` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.a().whileTrue(m_climber.setHeight(Meters.of(0.5)));
-    m_driverController.b().whileTrue(m_climber.setHeight(Meters.of(1)));
+    // sim stuff
+    m_driverController.button(1).whileTrue(m_climber.setHeight(Meters.of(0.5)));
+    m_driverController.button(2).whileTrue(m_climber.setHeight(Meters.of(1)));
     // Schedule `set` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.x().whileTrue(m_climber.set(0.3));
-    m_driverController.y().whileTrue(m_climber.set(-0.3));
+    m_driverController.button(3).whileTrue(m_climber.set(0.3));
+    m_driverController.button(4).whileTrue(m_climber.set(-0.3));
     
   }
 
